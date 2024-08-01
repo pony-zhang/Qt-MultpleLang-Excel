@@ -1,0 +1,15 @@
+{
+    "lang":[
+        {
+            "ts":"ch",
+            "excel":"简体中文"
+        }
+    ],
+    "location":[
+        {
+            "source_excel":"F:/tsFile/_Atomstack_PC.xlsx",
+            "traget_ts":"F:/Work/LaserWork/Engrave/engrave-desktop/MasterEngrave/atomstack_CH.ts"
+        }
+    ],
+    "sheet":"导出筛选结果"
+}

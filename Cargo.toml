@@ -1,0 +1,10 @@
+[package]
+name = "langtool"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+calamine = "0.25"
+quick-xml = {version = "0.36", features = ["serialize"] }
+serde = { version = "*", features = ["derive"] }
+serde_json = {version = "*"}
