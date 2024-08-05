@@ -60,7 +60,7 @@ pub struct Translation {
 
 
 // 修改 TS 文件，根据 Excel 文件中的翻译内容进行替换
-pub fn modify_ts_file(ts_path: &str, translations: HashMap<String, HashMap<String, String>>, config:&LangData) {
+pub fn modify_ts_file(ts_path: &str, translations: &HashMap<String, HashMap<String, String>>, config:&LangData) {
     // 打开 TS 文件
     let file = File::open(ts_path).unwrap();
     // 创建缓冲读取器
@@ -108,37 +108,49 @@ pub fn modify_ts_file(ts_path: &str, translations: HashMap<String, HashMap<Strin
             else {
                 
             }
-            // if inner_ts.translation_type.is_some(){
-            //     let source = msg.source.clone();
-            //     println!("source is {:?}, inner_ts.translation_type is {}",source, inner_ts.translation_type.clone().unwrap());
-            //     if let Some(value) = translations.get(&source){
-            //         if target_lang.is_some(){
-            //             let replace_value = value.get(&target_lang.unwrap()).unwrap();
-            //             println!("source is {:?}, not finish replace_value is {}",source, replace_value);
-            //             inner_ts.text.replace(replace_value.clone());
-            //             inner_ts.translation_type = Option::None;
-            //         }
-            //     }
-            // }
-            // else {
-            //     let source = msg.source.clone();
-            //     if let Some(value) = translations.get(&source){
-            //         if target_lang.is_some() && inner_ts.text.is_some(){
-            //             let replace_value = value.get(&target_lang.unwrap()).unwrap();
-            //             if (replace_value.clone() != inner_ts.text.clone().unwrap())
-            //             {
-            //                 println!("source is {:?}, update replace_value is {}, raw is {:?}",source,replace_value.clone(), inner_ts.text.clone().unwrap());
-            //                 inner_ts.text.replace(replace_value.clone());    
-            //             }
-            //         }
-            //     }
-            // }
         }
     }
     // 写回到同一文件
-    let mut file = File::create(ts_path).unwrap();
+    let file = File::create(ts_path).unwrap();
     // let mut buf_write = String::new();
-    let xml = to_string(&ts).unwrap();
-    // let modified_data = buf_write.replace(">", ">\n");
-    file.write_all(xml.as_bytes()).unwrap();
+    let xml_string = to_string(&ts).unwrap();
+
+    let mut buf_writer = BufWriter::new(file);
+
+    // 创建一个XML写入器
+    let mut writer = Writer::new_with_indent(&mut buf_writer, b' ', 4);
+
+    // 使用quick-xml的Reader来解析XML字符串
+    let mut reader = quick_xml::Reader::from_str(xml_string.as_str());
+    // reader.trim_text(true);
+
+    // 用于存储事件的缓冲区
+    let mut depth = 0;
+
+    
+    // 遍历XML事件并写入到文件
+    loop {
+        match reader.read_event() {
+            Ok(Event::Start(ref e)) => {
+                writer.write_event(Event::Start(e.clone())).expect("Failed to write event");
+                depth += 1;
+            }
+            Ok(Event::End(ref e)) => {
+                depth -= 1;
+                writer.write_event(Event::End(e.clone())).expect("Failed to write event");
+            }
+            Ok(Event::Empty(ref e)) => {
+                writer.write_event(Event::Empty(e.clone())).expect("Failed to write event");
+            }
+            Ok(Event::Text(ref e)) => {
+                writer.write_event(Event::Text(e.clone())).expect("Failed to write event");
+            }
+            Ok(Event::Eof) => break, // 结束
+            Err(e) => panic!("Error at position {}: {:?}", reader.buffer_position(), e),
+            _ => (), // 忽略其他事件
+        }
+    }
+
+    // 刷新缓冲区并写入文件
+    writer.into_inner().flush().expect("Failed to flush buffer");
 }

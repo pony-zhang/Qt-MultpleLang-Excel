@@ -13,9 +13,11 @@ fn main() {
     let excel_path = config.location.first().unwrap().source_excel.as_str();
     let ts_path = config.location.first().unwrap().traget_ts.as_str();
     let sheet = config.sheet.as_str();
-    // let excel_path = "Atomstack_PC.xlsx";
-    // let ts_path = "atomstack_EN.ts";
-
     let translations = read_excel(excel_path,sheet);
-    modify_ts_file(ts_path, translations, &config);
+
+    config.location.iter().for_each(|location| {
+        let ts_path = location.traget_ts.as_str();
+        modify_ts_file(ts_path, &translations, &config);
+    } );
+    // modify_ts_file(ts_path, translations, &config);
 }
